@@ -7,6 +7,8 @@ public class Environment {
     private final Map<String, Object> values = new HashMap<>();
     final Environment enclosing;
 
+    public enum InitializationState {UNINITIALIZED}
+
     Environment() {
         enclosing = null;
     }
@@ -21,7 +23,13 @@ public class Environment {
 
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
-            return values.get(name.lexeme);
+            Object value = values.get(name.lexeme);
+            if (value == InitializationState.UNINITIALIZED) {
+                throw new RuntimeError(name, "Access of unitialized variable '" +
+                        name.lexeme + "'.");
+            }
+
+            return value;
         }
 
         if (enclosing != null) {

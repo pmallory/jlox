@@ -3,6 +3,8 @@ package jlox;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jlox.Environment.InitializationState;
+
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Environment environment = new Environment();
     private boolean interactive = false;
@@ -167,7 +169,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
-        Object value = null;
+        Object value = InitializationState.UNINITIALIZED;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
         }
