@@ -5,8 +5,11 @@ import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Environment environment = new Environment();
+    private boolean interactive = false;
 
-    void interpret(List<Stmt> statements) {
+    void interpret(List<Stmt> statements, boolean interactive) {
+        this.interactive = interactive;
+
         try {
             for (Stmt statement : statements) {
                 execute(statement);
@@ -144,7 +147,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
-        evaluate(stmt.expression);
+        Object value = evaluate(stmt.expression);
+        if (this.interactive)
+            System.out.println(stringify(value));
         return null;
     }
 
