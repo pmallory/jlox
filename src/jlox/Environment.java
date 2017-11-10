@@ -25,7 +25,7 @@ public class Environment {
         if (values.containsKey(name.lexeme)) {
             Object value = values.get(name.lexeme);
             if (value == InitializationState.UNINITIALIZED) {
-                throw new RuntimeError(name, "Access of unitialized variable '" +
+                throw new RuntimeError(name, "Access of uninitialized variable '" +
                         name.lexeme + "'.");
             }
 
