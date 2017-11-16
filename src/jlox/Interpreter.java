@@ -8,7 +8,6 @@ import static jlox.Environment.InitializationState;
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = globals;
-    private boolean interactive = false;
 
     Interpreter() {
         globals.define("clock", new LoxCallable() {
@@ -24,9 +23,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         });
     }
 
-    void interpret(List<Stmt> statements, boolean interactive) {
-        this.interactive = interactive;
-
+    void interpret(List<Stmt> statements) {
         try {
             for (Stmt statement : statements) {
                 execute(statement);
@@ -169,7 +166,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return obj.toString();
     }
 
-    private Object evaluate(Expr expr) {
+    public Object evaluate(Expr expr) {
         return expr.accept(this);
     }
 
@@ -200,8 +197,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         Object value = evaluate(stmt.expression);
-        if (this.interactive)
-            System.out.println(stringify(value));
         return null;
     }
 
