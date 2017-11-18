@@ -8,9 +8,14 @@ import java.util.Stack;
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    private FunctionType currentFunction = FunctionType.NONE;
 
     Resolver(Interpreter interpreter) {
         this.interpreter = interpreter;
+     }
+
+     private enum FunctionType {
+        NONE, FUNCTION, METHOD
      }
 
     void resolve(List<Stmt> stmts) {
@@ -28,7 +33,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void resolveLocal(Expr expr, Token name) {
-        for (int i = scopes.size(); i >= 0; i--) {
+        for (int i = scopes.size() - 1; i >= 0; i--) {
             if (scopes.get(i).containsKey(name.lexeme)) {
                 interpreter.resolve(expr, scopes.size() -1 - i);
                 return;
@@ -37,7 +42,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         //Variable not found, assume it's global
     }
 
-    private void resolveFunction(Stmt.Function function) {
+    private void resolveFunction(Stmt.Function function, FunctionType type) {
+        FunctionType enclosingFunction = currentFunction;
+        currentFunction = type;
+
         beginScope();
 
         for(Token param : function.parameters) {
@@ -47,6 +55,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(function.body);
 
         endScope();
+
+        currentFunction = enclosingFunction;
     }
 
     private void beginScope() {
@@ -59,6 +69,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void declare(Token name) {
         if (scopes.isEmpty()) return;
+
+        if (scopes.peek().containsKey(name.lexeme)) {
+            Lox.error(name, "Variable with this name already declared in this scope.");
+        }
+
         scopes.peek().put(name.lexeme, false);
     }
 
@@ -147,7 +162,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name);
         define(stmt.name);
 
-        resolveFunction(stmt);
+        resolveFunction(stmt, FunctionType.FUNCTION);
         return null;
     }
 
@@ -169,6 +184,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
+        if (currentFunction == FunctionType.NONE) {
+            Lox.error(stmt.keyword, "Return outside of function.");
+        }
+
         if (stmt.expression != null) resolve(stmt.expression);
         return null;
     }
