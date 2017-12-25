@@ -177,6 +177,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ClassType enclosingClass = currentClass;
         currentClass = ClassType.CLASS;
 
+        if (stmt.superclass != null) {
+            resolve(stmt.superclass);
+        }
+
         beginScope();
         scopes.peek().put("this", true);
 
@@ -242,7 +246,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         } else if (currentFunction == FunctionType.INITIALIZER) {
             Lox.error(stmt.keyword, "Cannot return a value from an initializer.");
         }
-        
+
         if (stmt.expression != null) resolve(stmt.expression);
         return null;
     }
